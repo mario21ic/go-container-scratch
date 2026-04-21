@@ -66,7 +66,7 @@ func child() {
     must(syscall.Sethostname([]byte("mario21ic-container")))
 
     // must(syscall.Mount("", "/", "", syscall.MS_REC|syscall.MS_PRIVATE, "")) // old way to avoid mount propagation
-    must(syscall.Chroot("/home/ubuntu/repo/container-scratch/ubuntu-2404-rootfs"))
+    must(syscall.Chroot("./ubuntu-2404-rootfs"))
     must(os.Chdir("/"))
 
     // Mount proc
