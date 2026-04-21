@@ -88,6 +88,10 @@ func cgv2() {
     path := filepath.Join(cgroups, "mario21ic")
     os.Mkdir(path, 0755)
 
+    // Set Pids max
+    pids := filepath.Join(cgroups, "pids")
+    ioutil.WriteFile(filepath.Join(pids, "mario21ic/pids.max"), []byte("4"), 0700)
+
     // Set memory limitation
     must(ioutil.WriteFile(filepath.Join(path, "memory.max"), []byte("8097152"), 0700))
     // Disable swap
