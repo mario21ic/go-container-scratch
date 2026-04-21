@@ -20,18 +20,27 @@ func main() {
     switch os.Args[1] {
     case "run":
         run()
+    case "help":
+        fmt.Println("help:\n./main /bin/bash ./ubuntu-2404-rootfs")
     case "child":
         child()
     default:
-        panic("help")
+        run()
     }
 }
 
 func run() {
-    fmt.Printf("Running %v\n", os.Args[2:])
+    fmt.Printf("Running Go Container as RootFS %v\n", os.Args[2:])
 
     // Run child
-    cmd := exec.Command("/proc/self/exe", append([]string{"child"}, os.Args[2:]...)...)
+    /*
+    fmt.Printf("arg 0 - %s\n", os.Args[0]) // exe
+    fmt.Printf("arg 1 - %s\n", os.Args[1]) // /bin/bash
+    fmt.Printf("arg 2 - %s\n", os.Args[2]) // /rootfs
+    */
+
+    //cmd := exec.Command("/proc/self/exe", append([]string{"child"}, os.Args[2:]...)...)
+    cmd := exec.Command("/proc/self/exe", append([]string{"child"}, os.Args[1:]...)...)
     cmd.Stdin = os.Stdin
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
@@ -54,10 +63,18 @@ func child() {
     fmt.Printf("Child Running %v\n", os.Args[2:])
 
     // Applying cgroups v2
-    // cgv2()
+    //cgv2()
     // comentado porque requiere root para cgroups y actualmente esta con fake root privileged
 
-    cmd := exec.Command(os.Args[2], os.Args[3:]...)
+    /*
+    fmt.Printf("arg 0 - %s\n", os.Args[0]) // exe
+    fmt.Printf("arg 1 - %s\n", os.Args[1]) // child
+    fmt.Printf("arg 2 - %s\n", os.Args[2]) // /bin/bash
+    fmt.Printf("arg 3 - %s\n", os.Args[3]) // /rootfs
+    */
+
+    //cmd := exec.Command(os.Args[2], os.Args[3:]...)
+    cmd := exec.Command(os.Args[2], os.Args[4:]...)
     cmd.Stdin = os.Stdin
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
@@ -66,7 +83,8 @@ func child() {
     must(syscall.Sethostname([]byte("mario21ic-container")))
 
     // must(syscall.Mount("", "/", "", syscall.MS_REC|syscall.MS_PRIVATE, "")) // old way to avoid mount propagation
-    must(syscall.Chroot("./ubuntu-2404-rootfs"))
+    //must(syscall.Chroot("./ubuntu-2404-rootfs"))
+    must(syscall.Chroot(os.Args[3]))
     must(os.Chdir("/"))
 
     // Mount proc
