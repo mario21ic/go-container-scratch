@@ -5,6 +5,9 @@ import (
   "os"
   "os/exec"
   "syscall"
+  "path/filepath"
+  "io/ioutil"
+  "strconv"
 )
 
 func must(err error) {
@@ -33,8 +36,15 @@ func run() {
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
     cmd.SysProcAttr = &syscall.SysProcAttr{
-        Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS,
+        Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
         Unshareflags: syscall.CLONE_NEWNS,
+        Credential: &syscall.Credential{Uid: 0, Gid: 0},
+        UidMappings: []syscall.SysProcIDMap{
+            {ContainerID: 0, HostID: os.Getuid(), Size: 1},
+        },
+        GidMappings: []syscall.SysProcIDMap{
+            {ContainerID: 0, HostID: os.Getgid(), Size: 1},
+        },
     }
 
     must(cmd.Run())
@@ -42,6 +52,10 @@ func run() {
 
 func child() {
     fmt.Printf("Child Running %v\n", os.Args[2:])
+
+    // Applying cgroups v2
+    // cgv2()
+    // comentado porque requiere root para cgroups y actualmente esta con fake root privileged
 
     cmd := exec.Command(os.Args[2], os.Args[3:]...)
     cmd.Stdin = os.Stdin
@@ -67,4 +81,19 @@ func child() {
     // Umount
     must(syscall.Unmount("proc", 0))
     must(syscall.Unmount("mario21ic_temp", 0)) // unmount tmpfs
+}
+
+func cgv2() {
+    cgroups := "/sys/fs/cgroup/"
+    path := filepath.Join(cgroups, "mario21ic")
+    os.Mkdir(path, 0755)
+
+    // Set memory limitation
+    must(ioutil.WriteFile(filepath.Join(path, "memory.max"), []byte("8097152"), 0700))
+    // Disable swap
+    must(ioutil.WriteFile(filepath.Join(path, "memory.swap.max"), []byte("0"), 0700))
+
+    // Add the current process (or any PID) to the cgroup
+    pid := strconv.Itoa(os.Getpid())
+    must(ioutil.WriteFile(filepath.Join(path, "cgroup.procs"), []byte(pid), 0700))
 }
