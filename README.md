@@ -16,3 +16,9 @@ Uncomment line 57, then:
 ```
 sudo go run main.go run /bin/bash
 ```
+
+Try Linux native cli:
+```
+sudo unshare --pid --uts --net --mount --fork --mount-proc bash
+sudo lsns
+```
