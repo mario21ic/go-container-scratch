@@ -6,15 +6,20 @@ Init:
 ./init.sh
 ```
 
-Run without cgroups:
+Setup delegated cgroup once as root:
 ```
-go run main.go run /bin/bash
+sudo go run main.go setup-cgroup
 ```
 
-Run with cgroups:
-Uncomment line 57, then:
+Run rootless with the delegated cgroup:
 ```
-sudo go run main.go run /bin/bash
+go build -o go-container
+sudo ./go-container enter-cgroup ./go-container run ./ubuntu-2404-rootfs /bin/bash
+```
+
+If rootless startup fails with `operation not permitted`, check the host:
+```
+go run main.go check-rootless
 ```
 
 Try Linux native cli:
@@ -22,3 +27,10 @@ Try Linux native cli:
 sudo unshare --pid --uts --net --mount --fork --mount-proc bash
 sudo lsns
 ```
+
+TODO:
+* Conexion a internet
+* Compartir namespace como network similar a Pods
+* Permitir overlay2 como file system
+* Hacer bind mount de rutas especificas
+* Guardar images
